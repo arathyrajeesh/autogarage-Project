@@ -6,13 +6,34 @@ from .models import (
     SparePart, PartCategory, Supplier, StockTransaction, JobPartUsage, Invoice
 )
 
+ROLE_CHOICES = [
+    ('owner', 'Owner'),
+    ('advisor', 'Service Advisor'),
+    ('mechanic', 'Mechanic'),
+    ('store_manager', 'Store Manager'),
+]
 
 class LoginForm(AuthenticationForm):
+
     username = forms.CharField(
-        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Username'})
+        widget=forms.TextInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Username'
+        })
     )
+
+    role = forms.ChoiceField(
+        choices=ROLE_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'form-input'
+        })
+    )
+
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Password'})
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Password'
+        })
     )
 
 

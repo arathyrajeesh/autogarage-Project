@@ -45,11 +45,21 @@ def role_required(*roles):
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
+
     form = LoginForm(request, data=request.POST or None)
+
     if request.method == 'POST' and form.is_valid():
         user = form.get_user()
+        role_selected = form.cleaned_data.get("role")
+
+        if hasattr(user, "profile"):
+            if user.profile.role != role_selected:
+                messages.error(request, "Incorrect role selected.")
+                return render(request, 'core/login.html', {'form': form})
+
         login(request, user)
         return redirect('dashboard')
+
     return render(request, 'core/login.html', {'form': form})
 
 

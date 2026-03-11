@@ -33,18 +33,30 @@
     <form method="post">
       {% csrf_token %}
       <div class="form-group">
+        <label for="id_role">Role</label>
+        <select name="role" id="id_role" class="form-input">
+          <option value="owner">Owner</option>
+          <option value="advisor">Service Advisor</option>
+          <option value="mechanic">Mechanic</option>
+          <option value="store_manager">Store Manager</option>
+        </select>
+      </div>
+      <div class="form-group">
         <label for="id_username">Username</label>
         <input type="text" name="username" id="id_username" class="form-input"
-               placeholder="Enter your username" autofocus autocomplete="username">
+              placeholder="Enter your username" autofocus autocomplete="username">
       </div>
+
       <div class="form-group">
         <label for="id_password">Password</label>
         <input type="password" name="password" id="id_password" class="form-input"
-               placeholder="Enter your password" autocomplete="current-password">
+              placeholder="Enter your password" autocomplete="current-password">
       </div>
+
       <button type="submit" class="btn btn-primary login-submit">
         🔑 Sign In
       </button>
+
     </form>
 
     <p class="text-muted text-center mt-2" style="font-size:0.78rem;">
