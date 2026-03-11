@@ -42,6 +42,12 @@ def role_required(*roles):
 
 # ─── Auth Views ──────────────────────────────────────────────────────────────
 
+def landing_page(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return render(request, 'core/landing.html')
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
