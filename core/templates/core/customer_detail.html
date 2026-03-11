@@ -1,0 +1,41 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ customer.name }}{% endblock %}
+{% block page_title %}{{ customer.name }}{% endblock %}
+{% block breadcrumb %}<a href="{% url 'customer_list' %}" style="color:var(--text-3);">Customers</a> / Detail{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'customer_edit' customer.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+<a href="{% url 'vehicle_create' %}" class="btn btn-primary btn-sm">+ Add Vehicle</a>
+{% endblock %}
+{% block content %}
+<div class="grid-2 mb-3">
+  <div class="card">
+    <div class="card-header"><span class="card-title">🙋 Customer Info</span></div>
+    <div class="card-body">
+      <div class="job-meta-grid">
+        <div class="job-meta-item"><div class="job-meta-label">Name</div><div class="job-meta-value">{{ customer.name }}</div></div>
+        <div class="job-meta-item"><div class="job-meta-label">Phone</div><div class="job-meta-value text-mono">{{ customer.phone }}</div></div>
+        <div class="job-meta-item"><div class="job-meta-label">Email</div><div class="job-meta-value">{{ customer.email|default:"—" }}</div></div>
+        <div class="job-meta-item"><div class="job-meta-label">Registered</div><div class="job-meta-value">{{ customer.created_at|date:"d M Y" }}</div></div>
+      </div>
+      {% if customer.address %}<p class="text-muted">📍 {{ customer.address }}</p>{% endif %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">🚗 Vehicles ({{ vehicles.count }})</span></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Vehicle</th><th>Plate</th><th>Year</th><th></th></tr></thead>
+      <tbody>
+        {% for v in vehicles %}
+        <tr>
+          <td>{{ v.make }} {{ v.model }}</td>
+          <td class="text-mono text-accent">{{ v.license_plate }}</td>
+          <td>{{ v.year }}</td>
+          <td><a href="{% url 'vehicle_detail' v.pk %}" class="btn btn-secondary btn-sm">View</a></td>
+        </tr>
+        {% empty %}<tr><td colspan="4" class="text-center text-muted">No vehicles registered</td></tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+  </div>
+</div>
+{% endblock %}

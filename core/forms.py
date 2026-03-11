@@ -1,0 +1,169 @@
+from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import AuthenticationForm
+from .models import (
+    UserProfile, Customer, Vehicle, JobCard,
+    SparePart, PartCategory, Supplier, StockTransaction, JobPartUsage, Invoice
+)
+
+
+class LoginForm(AuthenticationForm):
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Username'})
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-input', 'placeholder': 'Password'})
+    )
+
+
+class StaffCreationForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=50, widget=forms.TextInput(attrs={'class': 'form-input'}))
+    last_name = forms.CharField(max_length=50, widget=forms.TextInput(attrs={'class': 'form-input'}))
+    username = forms.CharField(max_length=150, widget=forms.TextInput(attrs={'class': 'form-input'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-input'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-input'}))
+    role = forms.ChoiceField(
+        choices=[c for c in UserProfile.ROLE_CHOICES if c[0] != 'owner'],
+        widget=forms.Select(attrs={'class': 'form-input'})
+    )
+    phone = forms.CharField(max_length=20, required=False, widget=forms.TextInput(attrs={'class': 'form-input'}))
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username', 'email']
+
+
+class CustomerForm(forms.ModelForm):
+    class Meta:
+        model = Customer
+        fields = ['name', 'email', 'phone', 'address']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-input'}),
+            'email': forms.EmailInput(attrs={'class': 'form-input'}),
+            'phone': forms.TextInput(attrs={'class': 'form-input'}),
+            'address': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
+        }
+
+
+class VehicleForm(forms.ModelForm):
+    class Meta:
+        model = Vehicle
+        fields = ['customer', 'make', 'model', 'year', 'license_plate', 'vin', 'color', 'mileage']
+        widgets = {
+            'customer': forms.Select(attrs={'class': 'form-input'}),
+            'make': forms.TextInput(attrs={'class': 'form-input'}),
+            'model': forms.TextInput(attrs={'class': 'form-input'}),
+            'year': forms.NumberInput(attrs={'class': 'form-input'}),
+            'license_plate': forms.TextInput(attrs={'class': 'form-input'}),
+            'vin': forms.TextInput(attrs={'class': 'form-input'}),
+            'color': forms.TextInput(attrs={'class': 'form-input'}),
+            'mileage': forms.NumberInput(attrs={'class': 'form-input'}),
+        }
+
+
+class JobCardForm(forms.ModelForm):
+    class Meta:
+        model = JobCard
+        fields = ['vehicle', 'mechanic', 'problem_description', 'repair_instructions', 'labour_cost', 'notes']
+        widgets = {
+            'vehicle': forms.Select(attrs={'class': 'form-input'}),
+            'mechanic': forms.Select(attrs={'class': 'form-input'}),
+            'problem_description': forms.Textarea(attrs={'class': 'form-input', 'rows': 4}),
+            'repair_instructions': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
+            'labour_cost': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
+            'notes': forms.Textarea(attrs={'class': 'form-input', 'rows': 2}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        mechanics = User.objects.filter(profile__role='mechanic')
+        self.fields['mechanic'].queryset = mechanics
+        self.fields['mechanic'].required = False
+
+
+class JobStatusForm(forms.ModelForm):
+    class Meta:
+        model = JobCard
+        fields = ['status', 'repair_instructions', 'notes']
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-input'}),
+            'repair_instructions': forms.Textarea(attrs={'class': 'form-input', 'rows': 3}),
+            'notes': forms.Textarea(attrs={'class': 'form-input', 'rows': 2}),
+        }
+
+
+class SparePartForm(forms.ModelForm):
+    class Meta:
+        model = SparePart
+        fields = ['name', 'part_number', 'category', 'supplier', 'unit_price', 'stock_quantity', 'minimum_stock', 'location']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-input'}),
+            'part_number': forms.TextInput(attrs={'class': 'form-input'}),
+            'category': forms.Select(attrs={'class': 'form-input'}),
+            'supplier': forms.Select(attrs={'class': 'form-input'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
+            'stock_quantity': forms.NumberInput(attrs={'class': 'form-input'}),
+            'minimum_stock': forms.NumberInput(attrs={'class': 'form-input'}),
+            'location': forms.TextInput(attrs={'class': 'form-input'}),
+        }
+
+
+class PartCategoryForm(forms.ModelForm):
+    class Meta:
+        model = PartCategory
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-input'}),
+            'description': forms.Textarea(attrs={'class': 'form-input', 'rows': 2}),
+        }
+
+
+class SupplierForm(forms.ModelForm):
+    class Meta:
+        model = Supplier
+        fields = ['name', 'contact_person', 'phone', 'email', 'address']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-input'}),
+            'contact_person': forms.TextInput(attrs={'class': 'form-input'}),
+            'phone': forms.TextInput(attrs={'class': 'form-input'}),
+            'email': forms.EmailInput(attrs={'class': 'form-input'}),
+            'address': forms.Textarea(attrs={'class': 'form-input', 'rows': 2}),
+        }
+
+
+class StockTransactionForm(forms.ModelForm):
+    class Meta:
+        model = StockTransaction
+        fields = ['part', 'transaction_type', 'quantity', 'unit_price', 'reference', 'notes']
+        widgets = {
+            'part': forms.Select(attrs={'class': 'form-input'}),
+            'transaction_type': forms.Select(attrs={'class': 'form-input'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-input'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
+            'reference': forms.TextInput(attrs={'class': 'form-input'}),
+            'notes': forms.Textarea(attrs={'class': 'form-input', 'rows': 2}),
+        }
+
+
+class JobPartUsageForm(forms.ModelForm):
+    class Meta:
+        model = JobPartUsage
+        fields = ['part', 'quantity', 'unit_price']
+        widgets = {
+            'part': forms.Select(attrs={'class': 'form-input'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-input'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
+        }
+
+
+class InvoiceForm(forms.ModelForm):
+    class Meta:
+        model = Invoice
+        fields = ['status', 'amount_paid', 'payment_method', 'due_date', 'notes']
+        widgets = {
+            'status': forms.Select(attrs={'class': 'form-input'}),
+            'amount_paid': forms.NumberInput(attrs={'class': 'form-input', 'step': '0.01'}),
+            'payment_method': forms.TextInput(attrs={'class': 'form-input'}),
+            'due_date': forms.DateInput(attrs={'class': 'form-input', 'type': 'date'}),
+            'notes': forms.Textarea(attrs={'class': 'form-input', 'rows': 2}),
+        }

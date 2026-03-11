@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %}
+{% block title %}Staff{% endblock %}
+{% block page_title %}Staff Management{% endblock %}
+{% block topbar_actions %}<a href="{% url 'staff_create' %}" class="btn btn-primary">+ Add Staff</a>{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header"><span class="card-title">👥 All Staff Members</span><span class="text-muted">{{ staff.count }} members</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Email</th><th>Phone</th><th>Joined</th><th></th></tr></thead>
+    <tbody>
+      {% for profile in staff %}
+      <tr>
+        <td>{{ profile.user.get_full_name|default:profile.user.username }}</td>
+        <td class="text-mono">{{ profile.user.username }}</td>
+        <td><span class="badge badge-{{ profile.role }}">{{ profile.get_role_display }}</span></td>
+        <td>{{ profile.user.email|default:"—" }}</td>
+        <td class="text-mono">{{ profile.phone|default:"—" }}</td>
+        <td class="text-muted">{{ profile.created_at|date:"d M Y" }}</td>
+        <td>
+          <form method="post" action="{% url 'staff_delete' profile.pk %}" onsubmit="return confirm('Remove this staff member?');" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}<tr><td colspan="7" class="text-center text-muted">No staff registered yet</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

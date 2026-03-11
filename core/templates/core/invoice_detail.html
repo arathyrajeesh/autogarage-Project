@@ -1,0 +1,81 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ invoice.invoice_number }}{% endblock %}
+{% block page_title %}Invoice {{ invoice.invoice_number }}{% endblock %}
+{% block breadcrumb %}<a href="{% url 'invoice_list' %}" style="color:var(--text-3);">Invoices</a> / Detail{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'invoice_edit' invoice.pk %}" class="btn btn-secondary btn-sm">✏️ Edit</a>
+<button onclick="window.print()" class="btn btn-primary btn-sm">🖨 Print</button>
+{% endblock %}
+{% block content %}
+<div class="card" style="max-width:800px;">
+  <div class="card-body">
+    <div class="invoice-header">
+      <div>
+        <div class="invoice-number">{{ invoice.invoice_number }}</div>
+        <div class="text-muted mt-1">Issued: {{ invoice.issue_date|date:"d M Y" }}</div>
+        {% if invoice.due_date %}<div class="text-muted">Due: {{ invoice.due_date|date:"d M Y" }}</div>{% endif %}
+      </div>
+      <div class="text-right">
+        <span class="badge badge-{{ invoice.status }}" style="font-size:0.85rem;padding:0.4rem 1rem;">{{ invoice.get_status_display }}</span>
+        <div class="text-muted mt-1">{{ invoice.payment_method|default:"" }}</div>
+      </div>
+    </div>
+
+    <div class="grid-2 mb-3">
+      <div>
+        <div class="text-muted mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;">Bill To</div>
+        <div style="font-weight:600;font-size:1.05rem;">{{ invoice.job_card.vehicle.customer.name }}</div>
+        <div class="text-muted">{{ invoice.job_card.vehicle.customer.phone }}</div>
+        <div class="text-muted">{{ invoice.job_card.vehicle.customer.email }}</div>
+      </div>
+      <div>
+        <div class="text-muted mb-1" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;">Vehicle</div>
+        <div style="font-weight:600;">{{ invoice.job_card.vehicle.make }} {{ invoice.job_card.vehicle.model }}</div>
+        <div class="text-mono text-accent">{{ invoice.job_card.vehicle.license_plate }}</div>
+        <div class="text-muted">Job: <a href="{% url 'job_detail' invoice.job_card.pk %}" style="color:var(--teal);">{{ invoice.job_card.job_number }}</a></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <table>
+      <thead><tr><th>Description</th><th class="text-right">Qty</th><th class="text-right">Unit</th><th class="text-right">Amount</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Labour & Service</td>
+          <td class="text-right">1</td>
+          <td class="text-right text-mono">${{ invoice.job_card.labour_cost }}</td>
+          <td class="text-right text-mono">${{ invoice.job_card.labour_cost }}</td>
+        </tr>
+        {% for usage in invoice.job_card.parts_used.all %}
+        <tr>
+          <td>{{ usage.part.name }} <span class="text-muted" style="font-size:0.78rem;">({{ usage.part.part_number }})</span></td>
+          <td class="text-right text-mono">{{ usage.quantity }}</td>
+          <td class="text-right text-mono">${{ usage.unit_price }}</td>
+          <td class="text-right text-mono">${{ usage.total_price }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="border-top:2px solid var(--border);">
+          <td colspan="3" class="text-right font-bold invoice-total-row">Total:</td>
+          <td class="text-right text-mono invoice-total-row">${{ invoice.total_amount|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td colspan="3" class="text-right text-muted">Amount Paid:</td>
+          <td class="text-right text-mono text-green">${{ invoice.amount_paid|floatformat:2 }}</td>
+        </tr>
+        <tr>
+          <td colspan="3" class="text-right font-bold">Balance Due:</td>
+          <td class="text-right text-mono {% if invoice.balance_due > 0 %}text-red{% else %}text-green{% endif %} font-bold">${{ invoice.balance_due|floatformat:2 }}</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    {% if invoice.notes %}
+    <hr class="divider">
+    <p class="text-muted" style="font-size:0.85rem;">{{ invoice.notes }}</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

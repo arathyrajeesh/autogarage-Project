@@ -1,0 +1,94 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ job.job_number }}{% endblock %}
+{% block page_title %}<span class="job-number">{{ job.job_number }}</span>{% endblock %}
+{% block breadcrumb %}<a href="{% url 'job_list' %}" style="color:var(--text-3);">Job Cards</a> / Detail{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'job_update_status' job.pk %}" class="btn btn-secondary btn-sm">✏️ Update Status</a>
+{% if not job.invoice %}
+<a href="{% url 'invoice_create' job.pk %}" class="btn btn-primary btn-sm">🧾 Create Invoice</a>
+{% else %}
+<a href="{% url 'invoice_detail' job.invoice.pk %}" class="btn btn-teal btn-sm">🧾 View Invoice</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+
+<div class="job-meta-grid mb-3">
+  <div class="job-meta-item"><div class="job-meta-label">Status</div><div class="job-meta-value"><span class="badge badge-{{ job.status }}">{{ job.get_status_display }}</span></div></div>
+  <div class="job-meta-item"><div class="job-meta-label">Vehicle</div><div class="job-meta-value">{{ job.vehicle.make }} {{ job.vehicle.model }}</div></div>
+  <div class="job-meta-item"><div class="job-meta-label">License Plate</div><div class="job-meta-value text-mono text-accent">{{ job.vehicle.license_plate }}</div></div>
+  <div class="job-meta-item"><div class="job-meta-label">Customer</div><div class="job-meta-value"><a href="{% url 'customer_detail' job.vehicle.customer.pk %}" style="color:var(--teal);">{{ job.vehicle.customer.name }}</a></div></div>
+  <div class="job-meta-item"><div class="job-meta-label">Advisor</div><div class="job-meta-value">{{ job.advisor.get_full_name|default:job.advisor.username|default:"—" }}</div></div>
+  <div class="job-meta-item"><div class="job-meta-label">Mechanic</div><div class="job-meta-value">{{ job.mechanic.get_full_name|default:job.mechanic.username|default:"Unassigned" }}</div></div>
+  <div class="job-meta-item"><div class="job-meta-label">Created</div><div class="job-meta-value">{{ job.created_at|date:"d M Y H:i" }}</div></div>
+  <div class="job-meta-item"><div class="job-meta-label">Labour Cost</div><div class="job-meta-value text-green text-mono">${{ job.labour_cost }}</div></div>
+</div>
+
+<div class="grid-2 mb-3">
+  <div class="card">
+    <div class="card-header"><span class="card-title">🔍 Problem Description</span></div>
+    <div class="card-body"><p>{{ job.problem_description }}</p></div>
+  </div>
+  {% if job.repair_instructions %}
+  <div class="card">
+    <div class="card-header"><span class="card-title">🛠 Repair Instructions</span></div>
+    <div class="card-body"><p>{{ job.repair_instructions }}</p></div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Parts Used -->
+<div class="card mb-3">
+  <div class="card-header"><span class="card-title">⚙️ Parts Used</span>
+    <span class="text-mono text-green">Total Parts: ${{ job.total_parts_cost }}</span>
+  </div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Part</th><th>Part #</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+    <tbody>
+      {% for usage in parts_used %}
+      <tr>
+        <td>{{ usage.part.name }}</td>
+        <td class="text-mono" style="font-size:0.78rem;">{{ usage.part.part_number }}</td>
+        <td class="text-mono">{{ usage.quantity }}</td>
+        <td class="text-mono">${{ usage.unit_price }}</td>
+        <td class="text-mono text-green">${{ usage.total_price }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="5" class="text-center text-muted">No parts recorded</td></tr>
+      {% endfor %}
+    </tbody>
+    {% if parts_used %}
+    <tfoot>
+      <tr style="border-top:2px solid var(--border);">
+        <td colspan="4" class="text-right font-bold" style="padding:0.75rem 1rem;">Total Job Cost:</td>
+        <td class="text-mono text-green font-bold" style="padding:0.75rem 1rem;">${{ job.total_cost }}</td>
+      </tr>
+    </tfoot>
+    {% endif %}
+  </table></div>
+
+  <!-- Add Part Form -->
+  <div class="card-body" style="border-top:1px solid var(--border);">
+    <p class="text-muted mb-2" style="font-size:0.85rem;">Add Part to Job</p>
+    <form method="post" action="{% url 'job_add_part' job.pk %}" style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:flex-end;">
+      {% csrf_token %}
+      <div class="form-group" style="flex:2;min-width:160px;">
+        <label>Part</label>{{ part_form.part }}
+      </div>
+      <div class="form-group" style="flex:1;min-width:80px;">
+        <label>Qty</label>{{ part_form.quantity }}
+      </div>
+      <div class="form-group" style="flex:1;min-width:100px;">
+        <label>Unit Price</label>{{ part_form.unit_price }}
+      </div>
+      <button type="submit" class="btn btn-primary">+ Add Part</button>
+    </form>
+  </div>
+</div>
+
+{% if job.notes %}
+<div class="card">
+  <div class="card-header"><span class="card-title">📝 Notes</span></div>
+  <div class="card-body"><p>{{ job.notes }}</p></div>
+</div>
+{% endif %}
+
+{% endblock %}

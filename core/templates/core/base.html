@@ -1,0 +1,176 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AutoGarage{% endblock %} — Auto Garage MS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <a href="{% url 'dashboard' %}" class="logo">
+        <div class="logo-icon">🔧</div>
+        <div>
+          <div class="logo-text">AutoGarage</div>
+          <div class="logo-sub">Management System</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="sidebar-user">
+      <div class="user-avatar">{{ request.user.username|first|upper }}</div>
+      <div>
+        <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+        <div class="user-role">
+          {% if request.user.is_superuser %}Owner{% else %}{{ request.user.profile.get_role_display }}{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      {% with role=request.user.profile.role|default:"owner" %}
+
+      {% if request.user.is_superuser or role == "owner" %}
+      <div class="nav-section">
+        <div class="nav-section-label">Overview</div>
+        <a href="{% url 'owner_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'owner_dashboard' %}active{% endif %}">
+          <span class="icon">📊</span><span>Dashboard</span>
+        </a>
+        <a href="{% url 'reports' %}" class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+          <span class="icon">📈</span><span>Reports</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">People</div>
+        <a href="{% url 'staff_list' %}" class="nav-link {% if 'staff' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">👥</span><span>Staff</span>
+        </a>
+        <a href="{% url 'customer_list' %}" class="nav-link {% if 'customer' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🙋</span><span>Customers</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Operations</div>
+        <a href="{% url 'vehicle_list' %}" class="nav-link {% if 'vehicle' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🚗</span><span>Vehicles</span>
+        </a>
+        <a href="{% url 'job_list' %}" class="nav-link {% if 'job' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">📋</span><span>Job Cards</span>
+        </a>
+        <a href="{% url 'invoice_list' %}" class="nav-link {% if 'invoice' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🧾</span><span>Invoices</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Inventory</div>
+        <a href="{% url 'parts_list' %}" class="nav-link {% if 'part' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">⚙️</span><span>Spare Parts</span>
+        </a>
+        <a href="{% url 'category_list' %}" class="nav-link {% if 'category' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🏷️</span><span>Categories</span>
+        </a>
+        <a href="{% url 'supplier_list' %}" class="nav-link {% if 'supplier' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🏭</span><span>Suppliers</span>
+        </a>
+      </div>
+
+      {% elif role == "advisor" %}
+      <div class="nav-section">
+        <div class="nav-section-label">Dashboard</div>
+        <a href="{% url 'advisor_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'advisor_dashboard' %}active{% endif %}">
+          <span class="icon">📊</span><span>My Dashboard</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Service</div>
+        <a href="{% url 'customer_list' %}" class="nav-link {% if 'customer' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🙋</span><span>Customers</span>
+        </a>
+        <a href="{% url 'vehicle_list' %}" class="nav-link {% if 'vehicle' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🚗</span><span>Vehicles</span>
+        </a>
+        <a href="{% url 'job_list' %}" class="nav-link {% if 'job' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">📋</span><span>Job Cards</span>
+        </a>
+        <a href="{% url 'invoice_list' %}" class="nav-link {% if 'invoice' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🧾</span><span>Invoices</span>
+        </a>
+      </div>
+
+      {% elif role == "mechanic" %}
+      <div class="nav-section">
+        <div class="nav-section-label">My Work</div>
+        <a href="{% url 'mechanic_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'mechanic_dashboard' %}active{% endif %}">
+          <span class="icon">🔧</span><span>My Jobs</span>
+        </a>
+      </div>
+
+      {% elif role == "store_manager" %}
+      <div class="nav-section">
+        <div class="nav-section-label">Store</div>
+        <a href="{% url 'store_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'store_dashboard' %}active{% endif %}">
+          <span class="icon">📦</span><span>Dashboard</span>
+        </a>
+        <a href="{% url 'parts_list' %}" class="nav-link {% if 'part' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">⚙️</span><span>Spare Parts</span>
+        </a>
+        <a href="{% url 'stock_transaction' %}" class="nav-link {% if 'stock' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🔄</span><span>Stock Tx</span>
+        </a>
+        <a href="{% url 'category_list' %}" class="nav-link {% if 'category' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🏷️</span><span>Categories</span>
+        </a>
+        <a href="{% url 'supplier_list' %}" class="nav-link {% if 'supplier' in request.resolver_match.url_name %}active{% endif %}">
+          <span class="icon">🏭</span><span>Suppliers</span>
+        </a>
+      </div>
+      {% endif %}
+
+      {% endwith %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="{% url 'logout' %}" class="nav-link">
+        <span class="icon">🚪</span><span>Sign Out</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title">
+        {% block page_title %}Dashboard{% endblock %}
+        <span class="breadcrumb">{% block breadcrumb %}{% endblock %}</span>
+      </div>
+      <div class="topbar-actions">
+        {% block topbar_actions %}{% endblock %}
+      </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages-bar">
+      {% for m in messages %}
+      <div class="alert alert-{{ m.tags|default:'info' }}">
+        {% if m.tags == 'success' %}✅{% elif m.tags == 'error' %}❌{% elif m.tags == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+        {{ m }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,43 @@
+{% extends 'core/base.html' %}
+{% block title %}Spare Parts{% endblock %}
+{% block page_title %}Spare Parts{% endblock %}
+{% block topbar_actions %}
+<a href="{% url 'part_create' %}" class="btn btn-secondary btn-sm">+ Add Part</a>
+<a href="{% url 'stock_transaction' %}" class="btn btn-primary btn-sm">🔄 Stock Transaction</a>
+{% endblock %}
+{% block content %}
+<div class="card mb-2" style="padding:1rem 1.5rem;">
+  <form method="get" style="display:flex;gap:0.75rem;align-items:center;">
+    <input type="text" name="q" value="{{ q }}" class="form-input" style="max-width:300px;" placeholder="Search parts…">
+    <button class="btn btn-secondary">Search</button>
+    {% if q %}<a href="{% url 'parts_list' %}" class="btn btn-secondary">Clear</a>{% endif %}
+  </form>
+</div>
+<div class="card">
+  <div class="card-header"><span class="card-title">⚙️ All Spare Parts</span></div>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Name</th><th>Part #</th><th>Category</th><th>Price</th><th>Stock</th><th>Min</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for part in parts %}
+      <tr {% if part.is_low_stock %}class="low-stock"{% endif %}>
+        <td>{{ part.name }}</td>
+        <td class="text-mono" style="font-size:0.78rem;">{{ part.part_number }}</td>
+        <td>{{ part.category.name|default:"—" }}</td>
+        <td class="text-mono">${{ part.unit_price }}</td>
+        <td class="text-mono {% if part.is_low_stock %}text-red font-bold{% endif %}">{{ part.stock_quantity }}</td>
+        <td class="text-muted text-mono">{{ part.minimum_stock }}</td>
+        <td>
+          {% if part.is_low_stock %}
+          <span class="badge badge-low">Low Stock</span>
+          {% else %}
+          <span class="badge badge-ok">OK</span>
+          {% endif %}
+        </td>
+        <td><a href="{% url 'part_edit' part.pk %}" class="btn btn-secondary btn-sm">Edit</a></td>
+      </tr>
+      {% empty %}<tr><td colspan="8" class="text-center text-muted">No parts registered</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}

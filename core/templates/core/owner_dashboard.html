@@ -1,0 +1,173 @@
+{% extends 'core/base.html' %}
+{% block title %}Owner Dashboard{% endblock %}
+{% block page_title %}Owner Dashboard{% endblock %}
+{% block breadcrumb %}Welcome back, {{ request.user.get_full_name|default:request.user.username }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="{% url 'staff_create' %}" class="btn btn-primary btn-sm">+ Add Staff</a>
+<a href="{% url 'reports' %}" class="btn btn-secondary btn-sm">📈 Reports</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- STAT CARDS -->
+<div class="stats-grid">
+  <div class="stat-card accent">
+    <div class="stat-icon">📋</div>
+    <div class="stat-value">{{ active_jobs }}</div>
+    <div class="stat-label">Active Jobs</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">✅</div>
+    <div class="stat-value">{{ completed_jobs }}</div>
+    <div class="stat-label">Completed Jobs</div>
+  </div>
+  <div class="stat-card teal">
+    <div class="stat-icon">🙋</div>
+    <div class="stat-value">{{ total_customers }}</div>
+    <div class="stat-label">Customers</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">🚗</div>
+    <div class="stat-value">{{ total_vehicles }}</div>
+    <div class="stat-label">Vehicles</div>
+  </div>
+  <div class="stat-card {% if low_stock_parts > 0 %}red{% endif %}">
+    <div class="stat-icon">⚠️</div>
+    <div class="stat-value">{{ low_stock_parts }}</div>
+    <div class="stat-label">Low Stock Parts</div>
+  </div>
+  <div class="stat-card {% if pending_invoices > 0 %}yellow{% endif %}">
+    <div class="stat-icon">🧾</div>
+    <div class="stat-value">{{ pending_invoices }}</div>
+    <div class="stat-label">Unpaid Invoices</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon">👥</div>
+    <div class="stat-value">{{ staff_count }}</div>
+    <div class="stat-label">Staff Members</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">💰</div>
+    <div class="stat-value" style="font-size:1.4rem;">${{ monthly_revenue|floatformat:0 }}</div>
+    <div class="stat-label">Monthly Revenue</div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT GRID -->
+<div class="grid-2 mb-3">
+
+  <!-- Recent Jobs -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">📋 Recent Job Cards</span>
+      <a href="{% url 'job_list' %}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Job #</th><th>Vehicle</th><th>Mechanic</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for job in recent_jobs %}
+          <tr>
+            <td><a href="{% url 'job_detail' job.pk %}" class="text-accent text-mono">{{ job.job_number }}</a></td>
+            <td>{{ job.vehicle.make }} {{ job.vehicle.model }}<br>
+                <span class="text-muted">{{ job.vehicle.customer.name }}</span></td>
+            <td>{{ job.mechanic.get_full_name|default:job.mechanic.username|default:"—" }}</td>
+            <td><span class="badge badge-{{ job.status }}">{{ job.get_status_display }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted">No jobs yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Low Stock -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">⚠️ Low Stock Alert</span>
+      <a href="{% url 'parts_list' %}" class="btn btn-secondary btn-sm">All Parts</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Part</th><th>Part #</th><th>Qty</th><th>Min</th></tr>
+        </thead>
+        <tbody>
+          {% for part in low_stock_list %}
+          <tr class="low-stock">
+            <td>{{ part.name }}</td>
+            <td class="text-mono" style="font-size:0.78rem;">{{ part.part_number }}</td>
+            <td class="text-red font-bold">{{ part.stock_quantity }}</td>
+            <td class="text-muted">{{ part.minimum_stock }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted">✅ All stock levels OK</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if low_stock_list %}
+    <div class="card-body" style="padding-top:0.5rem;">
+      <a href="{% url 'stock_transaction' %}" class="btn btn-primary btn-sm">🔄 Record Stock In</a>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- BOTTOM ROW -->
+<div class="grid-2">
+
+  <!-- Mechanic Performance -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🔧 Mechanic Performance</span>
+    </div>
+    <div class="card-body">
+      {% for stat in mechanic_stats %}
+      <div class="flex-between mb-2">
+        <div>
+          <div style="font-weight:500;font-size:0.9rem;">{{ stat.mechanic.get_full_name|default:stat.mechanic.username }}</div>
+          <div class="text-muted">{{ stat.completed }} jobs completed</div>
+        </div>
+        <div class="text-accent font-bold text-mono">{{ stat.completed }}</div>
+      </div>
+      {% empty %}
+      <p class="text-muted">No mechanics registered yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Recent Invoices -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">🧾 Recent Invoices</span>
+      <a href="{% url 'invoice_list' %}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Invoice</th><th>Customer</th><th>Amount</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for inv in recent_invoices %}
+          <tr>
+            <td><a href="{% url 'invoice_detail' inv.pk %}" class="text-accent text-mono">{{ inv.invoice_number }}</a></td>
+            <td>{{ inv.job_card.vehicle.customer.name }}</td>
+            <td class="text-mono">${{ inv.total_amount|floatformat:2 }}</td>
+            <td><span class="badge badge-{{ inv.status }}">{{ inv.get_status_display }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-center text-muted">No invoices yet</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

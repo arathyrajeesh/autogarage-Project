@@ -1,0 +1,556 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.db.models import Sum, Count, Q
+from django.utils import timezone
+from datetime import date, timedelta
+from functools import wraps
+
+from .models import (
+    UserProfile, Customer, Vehicle, JobCard,
+    SparePart, PartCategory, Supplier, StockTransaction, JobPartUsage, Invoice
+)
+from .forms import (
+    LoginForm, StaffCreationForm, CustomerForm, VehicleForm, JobCardForm,
+    JobStatusForm, SparePartForm, PartCategoryForm, SupplierForm,
+    StockTransactionForm, JobPartUsageForm, InvoiceForm
+)
+
+
+# ─── Role Decorators ────────────────────────────────────────────────────────
+
+def role_required(*roles):
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            if not request.user.is_authenticated:
+                return redirect('login')
+            try:
+                profile = request.user.profile
+                if profile.role in roles or request.user.is_superuser:
+                    return view_func(request, *args, **kwargs)
+            except UserProfile.DoesNotExist:
+                if request.user.is_superuser:
+                    return view_func(request, *args, **kwargs)
+            messages.error(request, "You don't have permission to access that page.")
+            return redirect('dashboard')
+        return wrapper
+    return decorator
+
+
+# ─── Auth Views ──────────────────────────────────────────────────────────────
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    form = LoginForm(request, data=request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        user = form.get_user()
+        login(request, user)
+        return redirect('dashboard')
+    return render(request, 'core/login.html', {'form': form})
+
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+
+@login_required
+def dashboard(request):
+    try:
+        role = request.user.profile.role
+    except UserProfile.DoesNotExist:
+        role = 'owner' if request.user.is_superuser else None
+
+    if role == 'owner' or request.user.is_superuser:
+        return redirect('owner_dashboard')
+    elif role == 'advisor':
+        return redirect('advisor_dashboard')
+    elif role == 'mechanic':
+        return redirect('mechanic_dashboard')
+    elif role == 'store_manager':
+        return redirect('store_dashboard')
+    return render(request, 'core/dashboard_base.html')
+
+
+# ─── Owner Dashboard ─────────────────────────────────────────────────────────
+
+@login_required
+@role_required('owner')
+def owner_dashboard(request):
+    today = date.today()
+    month_start = today.replace(day=1)
+
+    total_customers = Customer.objects.count()
+    total_vehicles = Vehicle.objects.count()
+    active_jobs = JobCard.objects.exclude(status__in=['completed', 'delivered']).count()
+    completed_jobs = JobCard.objects.filter(status__in=['completed', 'delivered']).count()
+    low_stock_parts = SparePart.objects.filter(stock_quantity__lte=models_low_stock()).count()
+    pending_invoices = Invoice.objects.filter(status='unpaid').count()
+    staff_count = UserProfile.objects.exclude(role='owner').count()
+
+    monthly_revenue = Invoice.objects.filter(
+        status='paid', issue_date__gte=month_start
+    ).aggregate(total=Sum('amount_paid'))['total'] or 0
+
+    recent_jobs = JobCard.objects.select_related('vehicle__customer', 'mechanic').order_by('-created_at')[:8]
+    low_stock_list = SparePart.objects.filter(stock_quantity__lte=5).order_by('stock_quantity')[:5]
+    recent_invoices = Invoice.objects.select_related('job_card__vehicle__customer').order_by('-id')[:5]
+
+    mechanics = User.objects.filter(profile__role='mechanic')
+    mechanic_stats = []
+    for m in mechanics:
+        count = JobCard.objects.filter(mechanic=m, status='completed').count()
+        mechanic_stats.append({'mechanic': m, 'completed': count})
+
+    ctx = {
+        'total_customers': total_customers,
+        'total_vehicles': total_vehicles,
+        'active_jobs': active_jobs,
+        'completed_jobs': completed_jobs,
+        'low_stock_parts': SparePart.objects.filter(stock_quantity__lte=5).count(),
+        'pending_invoices': pending_invoices,
+        'staff_count': staff_count,
+        'monthly_revenue': monthly_revenue,
+        'recent_jobs': recent_jobs,
+        'low_stock_list': low_stock_list,
+        'recent_invoices': recent_invoices,
+        'mechanic_stats': mechanic_stats,
+    }
+    return render(request, 'core/owner_dashboard.html', ctx)
+
+
+def models_low_stock():
+    return 5
+
+
+# ─── Staff Management ────────────────────────────────────────────────────────
+
+@login_required
+@role_required('owner')
+def staff_list(request):
+    staff = UserProfile.objects.select_related('user').exclude(role='owner')
+    return render(request, 'core/staff_list.html', {'staff': staff})
+
+
+@login_required
+@role_required('owner')
+def staff_create(request):
+    form = StaffCreationForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        user = User.objects.create_user(
+            username=form.cleaned_data['username'],
+            email=form.cleaned_data['email'],
+            password=form.cleaned_data['password'],
+            first_name=form.cleaned_data['first_name'],
+            last_name=form.cleaned_data['last_name'],
+        )
+        UserProfile.objects.create(
+            user=user,
+            role=form.cleaned_data['role'],
+            phone=form.cleaned_data.get('phone', ''),
+        )
+        messages.success(request, f"Staff member {user.get_full_name()} created successfully.")
+        return redirect('staff_list')
+    return render(request, 'core/staff_form.html', {'form': form, 'title': 'Add Staff Member'})
+
+
+@login_required
+@role_required('owner')
+def staff_delete(request, pk):
+    profile = get_object_or_404(UserProfile, pk=pk)
+    if request.method == 'POST':
+        profile.user.delete()
+        messages.success(request, "Staff member removed.")
+        return redirect('staff_list')
+    return render(request, 'core/confirm_delete.html', {'obj': profile, 'type': 'Staff Member'})
+
+
+# ─── Customer Management ──────────────────────────────────────────────────────
+
+@login_required
+@role_required('owner', 'advisor')
+def customer_list(request):
+    q = request.GET.get('q', '')
+    customers = Customer.objects.all()
+    if q:
+        customers = customers.filter(Q(name__icontains=q) | Q(phone__icontains=q))
+    return render(request, 'core/customer_list.html', {'customers': customers, 'q': q})
+
+
+@login_required
+@role_required('owner', 'advisor')
+def customer_create(request):
+    form = CustomerForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        c = form.save(commit=False)
+        c.created_by = request.user
+        c.save()
+        messages.success(request, f"Customer '{c.name}' added.")
+        return redirect('customer_list')
+    return render(request, 'core/customer_form.html', {'form': form, 'title': 'Add Customer'})
+
+
+@login_required
+@role_required('owner', 'advisor')
+def customer_detail(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    vehicles = customer.vehicles.all()
+    return render(request, 'core/customer_detail.html', {'customer': customer, 'vehicles': vehicles})
+
+
+@login_required
+@role_required('owner', 'advisor')
+def customer_edit(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    form = CustomerForm(request.POST or None, instance=customer)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Customer updated.")
+        return redirect('customer_detail', pk=pk)
+    return render(request, 'core/customer_form.html', {'form': form, 'title': 'Edit Customer'})
+
+
+# ─── Vehicle Management ───────────────────────────────────────────────────────
+
+@login_required
+@role_required('owner', 'advisor')
+def vehicle_list(request):
+    vehicles = Vehicle.objects.select_related('customer').all()
+    return render(request, 'core/vehicle_list.html', {'vehicles': vehicles})
+
+
+@login_required
+@role_required('owner', 'advisor')
+def vehicle_create(request):
+    form = VehicleForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Vehicle added.")
+        return redirect('vehicle_list')
+    return render(request, 'core/vehicle_form.html', {'form': form, 'title': 'Add Vehicle'})
+
+
+@login_required
+@role_required('owner', 'advisor')
+def vehicle_detail(request, pk):
+    vehicle = get_object_or_404(Vehicle, pk=pk)
+    jobs = vehicle.job_cards.all().order_by('-created_at')
+    return render(request, 'core/vehicle_detail.html', {'vehicle': vehicle, 'jobs': jobs})
+
+
+# ─── Job Card Management ─────────────────────────────────────────────────────
+
+@login_required
+@role_required('owner', 'advisor')
+def job_list(request):
+    status = request.GET.get('status', '')
+    jobs = JobCard.objects.select_related('vehicle__customer', 'mechanic', 'advisor').all()
+    if status:
+        jobs = jobs.filter(status=status)
+    jobs = jobs.order_by('-created_at')
+    return render(request, 'core/job_list.html', {'jobs': jobs, 'status_filter': status})
+
+
+@login_required
+@role_required('owner', 'advisor')
+def job_create(request):
+    form = JobCardForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        job = form.save(commit=False)
+        job.advisor = request.user
+        job.save()
+        messages.success(request, f"Job card {job.job_number} created.")
+        return redirect('job_detail', pk=job.pk)
+    return render(request, 'core/job_form.html', {'form': form, 'title': 'Create Job Card'})
+
+
+@login_required
+def job_detail(request, pk):
+    job = get_object_or_404(JobCard, pk=pk)
+    parts_used = job.parts_used.select_related('part').all()
+    part_form = JobPartUsageForm()
+    return render(request, 'core/job_detail.html', {
+        'job': job, 'parts_used': parts_used, 'part_form': part_form
+    })
+
+
+@login_required
+@role_required('owner', 'advisor', 'mechanic')
+def job_update_status(request, pk):
+    job = get_object_or_404(JobCard, pk=pk)
+    form = JobStatusForm(request.POST or None, instance=job)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Job status updated.")
+        return redirect('job_detail', pk=pk)
+    return render(request, 'core/job_form.html', {'form': form, 'title': 'Update Job Status', 'job': job})
+
+
+@login_required
+@role_required('owner', 'advisor')
+def job_add_part(request, pk):
+    job = get_object_or_404(JobCard, pk=pk)
+    if request.method == 'POST':
+        form = JobPartUsageForm(request.POST)
+        if form.is_valid():
+            usage = form.save(commit=False)
+            usage.job_card = job
+            usage.save()
+            # Deduct from stock
+            part = usage.part
+            part.stock_quantity = max(0, part.stock_quantity - usage.quantity)
+            part.save()
+            messages.success(request, f"Part '{part.name}' added to job.")
+    return redirect('job_detail', pk=pk)
+
+
+# ─── Mechanic Dashboard ───────────────────────────────────────────────────────
+
+@login_required
+@role_required('mechanic')
+def mechanic_dashboard(request):
+    my_jobs = JobCard.objects.filter(
+        mechanic=request.user
+    ).select_related('vehicle__customer').order_by('-created_at')
+
+    active = my_jobs.exclude(status__in=['completed', 'delivered'])
+    completed = my_jobs.filter(status__in=['completed', 'delivered'])
+    ctx = {
+        'active_jobs': active,
+        'completed_jobs': completed,
+        'total_completed': completed.count(),
+    }
+    return render(request, 'core/mechanic_dashboard.html', ctx)
+
+
+# ─── Advisor Dashboard ────────────────────────────────────────────────────────
+
+@login_required
+@role_required('advisor')
+def advisor_dashboard(request):
+    my_jobs = JobCard.objects.filter(
+        advisor=request.user
+    ).select_related('vehicle__customer', 'mechanic').order_by('-created_at')
+
+    pending = my_jobs.filter(status='pending').count()
+    in_progress = my_jobs.filter(status='in_progress').count()
+    completed = my_jobs.filter(status='completed').count()
+    recent_customers = Customer.objects.filter(created_by=request.user).order_by('-created_at')[:5]
+
+    ctx = {
+        'my_jobs': my_jobs[:10],
+        'pending': pending,
+        'in_progress': in_progress,
+        'completed': completed,
+        'recent_customers': recent_customers,
+    }
+    return render(request, 'core/advisor_dashboard.html', ctx)
+
+
+# ─── Store Dashboard ──────────────────────────────────────────────────────────
+
+@login_required
+@role_required('store_manager')
+def store_dashboard(request):
+    total_parts = SparePart.objects.count()
+    low_stock = SparePart.objects.filter(stock_quantity__lte=5)
+    total_categories = PartCategory.objects.count()
+    total_suppliers = Supplier.objects.count()
+    recent_transactions = StockTransaction.objects.select_related('part').order_by('-created_at')[:10]
+
+    ctx = {
+        'total_parts': total_parts,
+        'low_stock_count': low_stock.count(),
+        'low_stock_parts': low_stock[:5],
+        'total_categories': total_categories,
+        'total_suppliers': total_suppliers,
+        'recent_transactions': recent_transactions,
+    }
+    return render(request, 'core/store_dashboard.html', ctx)
+
+
+# ─── Spare Parts ──────────────────────────────────────────────────────────────
+
+@login_required
+@role_required('owner', 'store_manager')
+def parts_list(request):
+    q = request.GET.get('q', '')
+    parts = SparePart.objects.select_related('category', 'supplier').all()
+    if q:
+        parts = parts.filter(Q(name__icontains=q) | Q(part_number__icontains=q))
+    return render(request, 'core/parts_list.html', {'parts': parts, 'q': q})
+
+
+@login_required
+@role_required('owner', 'store_manager')
+def part_create(request):
+    form = SparePartForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Spare part added.")
+        return redirect('parts_list')
+    return render(request, 'core/part_form.html', {'form': form, 'title': 'Add Spare Part'})
+
+
+@login_required
+@role_required('owner', 'store_manager')
+def part_edit(request, pk):
+    part = get_object_or_404(SparePart, pk=pk)
+    form = SparePartForm(request.POST or None, instance=part)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Part updated.")
+        return redirect('parts_list')
+    return render(request, 'core/part_form.html', {'form': form, 'title': 'Edit Spare Part'})
+
+
+@login_required
+@role_required('owner', 'store_manager')
+def stock_transaction(request):
+    form = StockTransactionForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        tx = form.save(commit=False)
+        tx.created_by = request.user
+        tx.save()
+        # Update stock
+        part = tx.part
+        if tx.transaction_type == 'in':
+            part.stock_quantity += tx.quantity
+        else:
+            part.stock_quantity = max(0, part.stock_quantity - tx.quantity)
+        part.save()
+        messages.success(request, "Stock transaction recorded.")
+        return redirect('store_dashboard')
+    return render(request, 'core/stock_form.html', {'form': form, 'title': 'Stock Transaction'})
+
+
+# ─── Categories & Suppliers ───────────────────────────────────────────────────
+
+@login_required
+@role_required('owner', 'store_manager')
+def category_list(request):
+    cats = PartCategory.objects.all()
+    return render(request, 'core/category_list.html', {'categories': cats})
+
+
+@login_required
+@role_required('owner', 'store_manager')
+def category_create(request):
+    form = PartCategoryForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Category created.")
+        return redirect('category_list')
+    return render(request, 'core/category_form.html', {'form': form, 'title': 'Add Category'})
+
+
+@login_required
+@role_required('owner', 'store_manager')
+def supplier_list(request):
+    suppliers = Supplier.objects.all()
+    return render(request, 'core/supplier_list.html', {'suppliers': suppliers})
+
+
+@login_required
+@role_required('owner', 'store_manager')
+def supplier_create(request):
+    form = SupplierForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Supplier added.")
+        return redirect('supplier_list')
+    return render(request, 'core/supplier_form.html', {'form': form, 'title': 'Add Supplier'})
+
+
+# ─── Billing / Invoices ───────────────────────────────────────────────────────
+
+@login_required
+@role_required('owner', 'advisor')
+def invoice_list(request):
+    invoices = Invoice.objects.select_related('job_card__vehicle__customer').order_by('-id')
+    return render(request, 'core/invoice_list.html', {'invoices': invoices})
+
+
+@login_required
+@role_required('owner', 'advisor')
+def invoice_create(request, job_pk):
+    job = get_object_or_404(JobCard, pk=job_pk)
+    if hasattr(job, 'invoice'):
+        return redirect('invoice_detail', pk=job.invoice.pk)
+    form = InvoiceForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        inv = form.save(commit=False)
+        inv.job_card = job
+        inv.save()
+        messages.success(request, f"Invoice {inv.invoice_number} created.")
+        return redirect('invoice_detail', pk=inv.pk)
+    return render(request, 'core/invoice_form.html', {'form': form, 'job': job, 'title': 'Create Invoice'})
+
+
+@login_required
+def invoice_detail(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    return render(request, 'core/invoice_detail.html', {'invoice': invoice})
+
+
+@login_required
+@role_required('owner', 'advisor')
+def invoice_edit(request, pk):
+    invoice = get_object_or_404(Invoice, pk=pk)
+    form = InvoiceForm(request.POST or None, instance=invoice)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        messages.success(request, "Invoice updated.")
+        return redirect('invoice_detail', pk=pk)
+    return render(request, 'core/invoice_form.html', {
+        'form': form, 'job': invoice.job_card, 'title': 'Edit Invoice'
+    })
+
+
+# ─── Reports ──────────────────────────────────────────────────────────────────
+
+@login_required
+@role_required('owner')
+def reports(request):
+    today = date.today()
+    month_start = today.replace(day=1)
+
+    # Daily revenue
+    daily_rev = Invoice.objects.filter(
+        status='paid', issue_date=today
+    ).aggregate(t=Sum('amount_paid'))['t'] or 0
+
+    # Monthly revenue
+    monthly_rev = Invoice.objects.filter(
+        status='paid', issue_date__gte=month_start
+    ).aggregate(t=Sum('amount_paid'))['t'] or 0
+
+    # Pending jobs
+    pending_jobs = JobCard.objects.exclude(status__in=['completed', 'delivered'])
+
+    # Inventory value
+    parts = SparePart.objects.all()
+    inv_value = sum(p.unit_price * p.stock_quantity for p in parts)
+
+    # Mechanic performance
+    mechanics = User.objects.filter(profile__role='mechanic')
+    perf = []
+    for m in mechanics:
+        total = JobCard.objects.filter(mechanic=m).count()
+        done = JobCard.objects.filter(mechanic=m, status='completed').count()
+        perf.append({'mechanic': m, 'total': total, 'completed': done})
+
+    ctx = {
+        'daily_revenue': daily_rev,
+        'monthly_revenue': monthly_rev,
+        'pending_jobs': pending_jobs,
+        'inventory_value': inv_value,
+        'mechanic_performance': perf,
+        'low_stock': SparePart.objects.filter(stock_quantity__lte=5),
+    }
+    return render(request, 'core/reports.html', ctx)
