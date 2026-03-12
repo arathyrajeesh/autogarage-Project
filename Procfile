@@ -1,0 +1,1 @@
+web: gunicorn autogarage.wsgi:application

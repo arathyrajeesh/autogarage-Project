@@ -4,232 +4,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GEARSHIFT AI | Autonomous Garage Management</title>
+    <title>GEARSHIFT AI | Precision Garage Management</title>
     <link rel="stylesheet" href="{% static 'core/css/style.css' %}">
-    
-    <style>
-        /* ── INNOVATION OVERRIDES ── */
-        :root {
-            --glow-accent: rgba(232, 93, 4, 0.4);
-            --glow-teal: rgba(6, 182, 212, 0.3);
-        }
-
-        body { overflow-x: hidden; }
-
-        /* Scanning Hero Effect */
-        .hero {
-            position: relative;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: radial-gradient(circle at center, rgba(17, 19, 24, 0.2) 0%, var(--bg-deep) 100%),
-                        url("{% static 'core/images/hero_garage.png' %}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            overflow: hidden;
-        }
-
-        .scanline {
-            width: 100%;
-            height: 100px;
-            z-index: 5;
-            background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, var(--glow-accent) 50%, rgba(0, 0, 0, 0) 100%);
-            opacity: 0.15;
-            position: absolute;
-            bottom: 100%;
-            animation: scan 4s linear infinite;
-        }
-
-        @keyframes scan {
-            0% { bottom: 120%; }
-            100% { bottom: -20%; }
-        }
-
-        /* Angled Precision Buttons */
-        .btn-innovative {
-            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
-            padding: 1.2rem 3rem !important;
-            font-family: var(--font-display);
-            letter-spacing: 2px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .btn-innovative:hover {
-            clip-path: polygon(0 0, 90% 0, 100% 100%, 10% 100%);
-            transform: scale(1.05);
-            letter-spacing: 4px;
-        }
-
-        /* Glassmorphism UI */
-        .glass-card {
-            background: rgba(22, 27, 34, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        .ticker-wrap {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            background: var(--bg-panel);
-            border-top: 1px solid var(--accent);
-            padding: 5px 0;
-            z-index: 1000;
-            font-family: var(--font-data);
-            font-size: 0.7rem;
-            color: var(--accent);
-            overflow: hidden;
-        }
-
-        .ticker {
-            display: inline-block;
-            white-space: nowrap;
-            animation: ticker 30s linear infinite;
-        }
-
-        @keyframes ticker {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
-
-        .navbar {
-            backdrop-filter: blur(15px);
-            background: rgba(10, 11, 13, 0.8);
-            border-bottom: 1px solid var(--border);
-            position: fixed;
-            top: 0; width: 100%; z-index: 1000;
-            padding: 1rem 4rem;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'core/css/landing.css' %}">
 </head>
 <body>
 
-    <nav class="navbar flex-between">
+    <nav class="navbar flex-between" style="backdrop-filter: blur(12px); background: rgba(10, 11, 13, 0.85); border-bottom: 1px solid var(--border); padding: 1.2rem 5%;">
         <div class="logo flex gap-2">
-            <div style="width: 30px; height: 30px; background: var(--accent); clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);"></div>
-            <span class="text-1 font-bold" style="font-family: var(--font-display); font-size: 1.4rem; letter-spacing: 2px;">GEARSHIFT <span class="text-accent">AI</span></span>
+            <div style="width: 28px; height: 28px; background: var(--accent); border-radius: 6px;"></div>
+            <span class="text-1 font-bold" style="font-size: 1.2rem; letter-spacing: -0.5px; font-family: var(--font-display);">GEARSHIFT <span class="text-accent">AI</span></span>
         </div>
-        <div class="flex gap-3">
-            <a href="{% url 'login' %}" class="btn btn-secondary btn-sm">COMMAND_LOGIN</a>
-            <a href="{% url 'advisor_dashboard' %}" class="btn btn-primary btn-sm btn-innovative" style="padding: 0.5rem 1.5rem !important;">LAUNCH_SYSTEM</a>
+        <div class="flex gap-4">
+            <a href="{% url 'login' %}" style="color: var(--text-2); text-decoration: none; font-size: 0.9rem; font-weight: 500;">Login</a>
+            <a href="{% url 'advisor_dashboard' %}" class="btn btn-primary btn-sm">Get Started</a>
         </div>
     </nav>
 
     <header class="hero">
-        <div class="scanline"></div>
-        <div class="hero-content" style="z-index: 10; text-align: center;">
-            <div class="badge badge-in_progress mb-2" style="background: transparent; border: 1px solid var(--teal); color: var(--teal);">
-                NEURAL_ENGINE_ACTIVE // V4.0.2
+        <div class="hero-content">
+            <div class="badge badge-in_progress mb-2" style="background: rgba(232, 93, 4, 0.1); color: var(--accent); border: 1px solid rgba(232, 93, 4, 0.25);">
+                Next-Gen Workshop OS
             </div>
-            <h1 style="font-family: var(--font-display); font-size: clamp(3.5rem, 12vw, 8rem); font-weight: 900; line-height: 0.8; margin-bottom: 2rem; text-transform: uppercase;">
-                The <span class="text-accent">Autonomous</span><br>Workshop
-            </h1>
-            <p style="font-family: var(--font-data); color: var(--text-2); max-width: 650px; margin: 0 auto 3rem; font-size: 1.1rem; line-height: 1.6;">
-                The world's first predictive management system. We don't just track your garage; we simulate its future.
-            </p>
-            <div class="flex gap-3" style="justify-content: center;">
-                <button class="btn btn-primary btn-innovative">INITIALIZE_FREE_TRIAL</button>
-                <button class="btn btn-secondary" style="border: 1px solid var(--text-3);">WATCH_DEEP_DIVE</button>
+            <h1>The Intelligent <br><span style="background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Workshop</span></h1>
+            <p>Elevate your garage operations with predictive analytics, real-time spatial monitoring, and automated inventory control.</p>
+            <div class="cta-group">
+                <a href="{% url 'advisor_dashboard' %}" class="btn btn-primary" style="padding: 1rem 2rem;">Initialize Free Trial</a>
+                <button class="btn btn-secondary" style="padding: 1rem 2rem;">Request a Demo</button>
             </div>
         </div>
     </header>
 
-    <section class="content section-padding">
-        <div class="grid-2" style="align-items: center; gap: 4rem;">
-            <div class="visual-container">
-                
-                <div class="glass-card stat-card" style="position: relative; z-index: 10; margin-top: -100px; max-width: 300px;">
-                    <div class="flex-between">
-                        <span class="text-mono text-teal">ACTV_SCAN: 88%</span>
-                        <div style="width: 8px; height: 8px; background: var(--teal); border-radius: 50%; animation: pulse 1s infinite;"></div>
+    <section class="section-padding" style="background: var(--bg-deep);">
+        <div class="content">
+            <div class="grid-2" style="align-items: center; gap: 6rem;">
+                <div>
+                    <h2 style="font-family: var(--font-display); font-size: 3.5rem; letter-spacing: -2px; line-height: 1; margin-bottom: 1.5rem;">Visual <span class="text-accent">Spatial</span> Intelligence</h2>
+                    <p class="text-2" style="font-size: 1.1rem; margin-bottom: 2rem;">Transform your workshop floor into a real-time data visualization. Our Spatial UI maps every bay, identifies bottlenecks instantly, and optimizes tech productivity through AI-driven bay management.</p>
+                    <div class="grid-2" style="gap: 1.5rem;">
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: var(--accent);">22%</div>
+                            <div class="stat-label">Reduction in Idle Time</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" style="color: var(--teal);">40%</div>
+                            <div class="stat-label">Gain in Throughput</div>
+                        </div>
                     </div>
-                    <div class="progress-bar-wrap mt-1"><div class="progress-bar" style="width: 88%; background: var(--teal);"></div></div>
-                    <p class="text-3 mt-1" style="font-size: 0.7rem;">Detecting unusual vibration in Lift 04 Hydraulic Line...</p>
                 </div>
-            </div>
-            <div>
-                <h2 style="font-family: var(--font-display); font-size: 3rem; line-height: 1;">SPATIAL <br><span class="text-teal">DASHBOARDING</span></h2>
-                <p class="text-2 mt-2">Stop looking at spreadsheets. Our <strong>Spatial UI</strong> maps your actual workshop floor. Identify bottlenecks visually as they happen. If a car stays in a bay 15 minutes past its service estimate, the bay glows amber.</p>
-                <div class="mt-3 grid-2" style="gap: 1rem;">
-                    <div class="stat-card" style="background: var(--bg-panel);">
-                        <div class="stat-value" style="font-size: 1.2rem;">-22%</div>
-                        <div class="stat-label">Idle Bay Time</div>
-                    </div>
-                    <div class="stat-card" style="background: var(--bg-panel);">
-                        <div class="stat-value" style="font-size: 1.2rem;">+40%</div>
-                        <div class="stat-label">Tech Productivity</div>
-                    </div>
+                <div style="position: relative;">
+                    <img src="{% static 'core/images/predictive_ui.png' %}" alt="Spatial Dashboard" style="width: 100%; border-radius: 12px; box-shadow: 0 30px 60px rgba(0,0,0,0.6); border: 1px solid var(--border);">
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="section-padding" style="background: var(--bg-panel); position: relative;">
+    <section class="section-padding" style="background: var(--bg-panel);">
         <div class="content">
             <div class="text-center mb-3">
-                <h2 style="font-family: var(--font-display); font-size: 3rem;">NEURAL <span class="text-accent">SUPPLY</span></h2>
-                <p class="text-3">Our AI predicts your inventory needs 14 days in advance using regional market trends.</p>
+                <h2 style="font-family: var(--font-display); font-size: 3rem; letter-spacing: -1px;">Enterprise <span class="text-accent">Automation</span></h2>
+                <p class="text-3" style="max-width: 600px; margin: 1rem auto;">Scaling your garage with intelligence, not just software.</p>
             </div>
             
             <div class="grid-3">
-                <div class="glass-card stat-card accent">
-                    <div class="stat-icon">🧠</div>
-                    <h3 class="card-title">Auto-Ordering</h3>
-                    <p class="text-3" style="font-size: 0.85rem;">System detected a 15% surge in Audi brake pad failure in your city. 10 units pre-ordered.</p>
+                <div class="card" style="padding: 2.5rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1.5rem;">📈</div>
+                    <h3 class="card-title" style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--accent);">Predictive Inventory</h3>
+                    <p class="text-2" style="font-size: 0.95rem;">AI-driven demand forecasting that automates ordering and prevents stock-outs before they happen.</p>
                 </div>
-                <div class="glass-card stat-card teal">
-                    <div class="stat-icon">📡</div>
-                    <h3 class="card-title">Vendor Sync</h3>
-                    <p class="text-3" style="font-size: 0.85rem;">Direct API connection to 50+ national parts suppliers for instant price-comparison.</p>
+                <div class="card" style="padding: 2.5rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1.5rem;">🛡️</div>
+                    <h3 class="card-title" style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--accent);">Revenue Protection</h3>
+                    <p class="text-2" style="font-size: 0.95rem;">Smart audits flag forgotten parts and labor leaks, ensuring you capture 100% of your billable services.</p>
                 </div>
-                <div class="glass-card stat-card green">
-                    <div class="stat-icon">⚡</div>
-                    <h3 class="card-title">Revenue Guard</h3>
-                    <p class="text-3" style="font-size: 0.85rem;">Flags "Forgotten Parts"—items used in repair but not added to the invoice.</p>
+                <div class="card" style="padding: 2.5rem;">
+                    <div style="font-size: 2.5rem; margin-bottom: 1.5rem;">⚡</div>
+                    <h3 class="card-title" style="font-size: 1.25rem; margin-bottom: 1rem; color: var(--accent);">Lightning Dispatch</h3>
+                    <p class="text-2" style="font-size: 0.95rem;">Optimized job assignment based on tech skill levels and bay availability for maximum efficiency.</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <section class="section-padding text-center">
+    <section class="section-padding text-center" style="background: radial-gradient(circle at center, rgba(232, 93, 4, 0.05) 0%, var(--bg-deep) 100%);">
         <div class="content">
-            <h2 style="font-family: var(--font-display); font-size: 4rem;">JOIN THE <span class="text-accent">EVOLUTION.</span></h2>
-            <p class="text-2 mb-3">The future of automotive maintenance isn't manual. It's GearShift.</p>
-            <button class="btn btn-primary btn-innovative" style="font-size: 1.5rem;">START_DEPLOYMENT_NOW</button>
+            <h2 style="font-family: var(--font-display); font-size: 4rem; letter-spacing: -2px; margin-bottom: 1rem;">Ready for the <span class="text-accent">Redshift?</span></h2>
+            <p class="text-2 mb-3" style="font-size: 1.2rem;">Join hundreds of elite workshops running on GearShift AI.</p>
+            <a href="{% url 'advisor_dashboard' %}" class="btn btn-primary" style="padding: 1.2rem 3rem; font-size: 1.1rem;">Deploy Your System Today</a>
         </div>
     </section>
 
-    <footer style="padding: 4rem 2rem; border-top: 1px solid var(--border); margin-bottom: 30px;">
-        <div class="content grid-3">
+    <footer style="padding: 6rem 5%; background: var(--bg-deep); border-top: 1px solid var(--border);">
+        <div class="grid-3" style="gap: 4rem;">
             <div>
-                <div class="logo-text">GEARSHIFT AI</div>
-                <p class="text-3 mt-1">Global Precision Engineering Solutions.</p>
+                <div class="font-bold text-1" style="font-family: var(--font-display); font-size: 1.4rem; margin-bottom: 1rem;">GEARSHIFT <span class="text-accent">AI</span></div>
+                <p class="text-3">Redefining workshop efficiency through autonomous intelligence and precision engineering.</p>
+            </div>
+            <div class="grid-2">
+                <div>
+                    <h4 class="text-1" style="font-size: 0.9rem; margin-bottom: 1.5rem;">Platform</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.75rem;"><a href="#" class="text-3" style="text-decoration: none;">Features</a></li>
+                        <li style="margin-bottom: 0.75rem;"><a href="#" class="text-3" style="text-decoration: none;">Security</a></li>
+                        <li style="margin-bottom: 0.75rem;"><a href="#" class="text-3" style="text-decoration: none;">API Docs</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-1" style="font-size: 0.9rem; margin-bottom: 1.5rem;">Company</h4>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 0.75rem;"><a href="#" class="text-3" style="text-decoration: none;">About Us</a></li>
+                        <li style="margin-bottom: 0.75rem;"><a href="#" class="text-3" style="text-decoration: none;">Case Studies</a></li>
+                        <li style="margin-bottom: 0.75rem;"><a href="#" class="text-3" style="text-decoration: none;">Contact</a></li>
+                    </ul>
+                </div>
             </div>
             <div>
-                <h4 class="nav-section-label">System</h4>
-                <a href="#" class="nav-link">Network Status</a>
-                <a href="#" class="nav-link">Encrypted Storage</a>
+                <h4 class="text-1" style="font-size: 0.9rem; margin-bottom: 1.5rem;">Subscribe to Intel</h4>
+                <div class="flex" style="background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 4px;">
+                    <input type="email" placeholder="Email address" style="background: transparent; border: none; color: white; padding: 0.5rem 1rem; flex: 1; outline: none;">
+                    <button class="btn btn-primary btn-sm">Join</button>
+                </div>
             </div>
-            <div>
-                <h4 class="nav-section-label">Control</h4>
-                <a href="#" class="nav-link">Contact Support</a>
-                <a href="#" class="nav-link">Developer API</a>
-            </div>
+        </div>
+        <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center;" class="text-3">
+            &copy; 2026 GearShift AI Technologies. All rights reserved.
         </div>
     </footer>
 
-    <div class="ticker-wrap">
-        <div class="ticker">
-            [ SYSTEM_LOG: BAY_01 READY ] • [ STOCK_ALERT: OIL_FILTERS_LOW ] • [ AI_MSG: REVENUE_UP_12%_THIS_WEEK ] • [ SECURITY: AES-256_ACTIVE ] • [ NODE: SERVER_CHICAGO_01_CONNECTED ] • [ SYSTEM_LOG: BAY_01 READY ] • [ STOCK_ALERT: OIL_FILTERS_LOW ]
-        </div>
-    </div>
-
-    <div class="login-gfx" style="opacity: 0.3;">
-        <div class="gear gear-1"></div>
-        <div class="gear gear-2"></div>
+</body>
+</html>
+v>
     </div>
 
 </body>
