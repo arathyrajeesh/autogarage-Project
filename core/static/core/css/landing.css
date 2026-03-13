@@ -153,6 +153,16 @@ footer {
     }
 }
 
+/* Landing Utilities */
+.section-padding {
+    padding: 6rem 5%;
+}
+
+.text-1 { color: var(--text-1); }
+.text-2 { color: var(--text-2); }
+.text-3 { color: var(--text-3); }
+.gap-4 { gap: 1rem; }
+
 /* Responsive */
 @media (max-width: 768px) {
     .hero h1 {
@@ -160,5 +170,11 @@ footer {
     }
     .hero p {
         font-size: 1rem;
+    }
+    .grid-2, .grid-3 {
+        grid-template-columns: 1fr;
+    }
+    .section-padding {
+        padding: 3rem 5%;
     }
 }

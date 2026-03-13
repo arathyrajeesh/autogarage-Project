@@ -1,12 +1,18 @@
 from pathlib import Path
 import os
-import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+import dj_database_url
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.onrender.com"
+]
 # SECRET_KEY = 'django-insecure-autogarage-secret-key-change-in-production'
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key')
-DEBUG = False
-ALLOWED_HOSTS = ['*']
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+ALLOWED_HOSTS = [
+    ".onrender.com",
+    "localhost",
+    "127.0.0.1"
+]
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -48,13 +54,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'autogarage.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
+
+DATABASES = {
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL")
+    )
+}
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 AUTH_PASSWORD_VALIDATORS = []
 
 LANGUAGE_CODE = 'en-us'
