@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load static %}
 {% block title %}{{ invoice.invoice_number }}{% endblock %}
 {% block page_title %}Invoice {{ invoice.invoice_number }}{% endblock %}
 {% block breadcrumb %}<a href="{% url 'invoice_list' %}" style="color:var(--text-3);">Invoices</a> / Detail{% endblock %}
@@ -92,11 +93,15 @@
 </style>
 
 <div class="invoice-paper">
-  <div class="invoice-row">
+  <div class="invoice-row" style="align-items: flex-start;">
     <div class="company-info">
-      <h2>GearShift AI Inc.</h2>
-      <p>123 Enterprise Way</p>
-      <p>Innovation City, ST 12345</p>
+      <h2 style="font-weight: 800; color: #1a1a1a; margin-bottom: 0.5rem;">Krishna Auto Care</h2>
+      <p>Industrial Area, Phase 2</p>
+      <p>Tech Hub, ST 56789</p>
+      <p>Phone: +91 98765 43210</p>
+    </div>
+    <div class="company-logo">
+      <img src="{% static 'core/images/logo.png' %}" alt="Logo" style="width:100px;height:100px;border-radius:12px;object-fit:cover;border:1px solid var(--invoice-border);box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
     </div>
   </div>
 
@@ -165,7 +170,7 @@
 
   <div class="footer-section">
     <div class="terms-title">Terms and Conditions</div>
-    <p class="terms-text">Payment is due in 14 days<br>Please make checks payable to: GearShift AI Inc.</p>
+    <p class="terms-text">Payment is due in 14 days<br>Please make checks payable to: Krishna Auto Care</p>
   </div>
 </div>
 {% endblock %}

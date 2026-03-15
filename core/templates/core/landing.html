@@ -11,9 +11,9 @@
 <body>
 
     <nav class="navbar flex-between" style="backdrop-filter: blur(12px); background: rgba(10, 11, 13, 0.85); border-bottom: 1px solid var(--border); padding: 1.2rem 5%;">
-        <div class="logo flex gap-2">
-            <div style="width: 28px; height: 28px; background: var(--accent); border-radius: 6px;"></div>
-            <span class="text-1 font-bold" style="font-size: 1.2rem; letter-spacing: -0.5px; font-family: var(--font-display);">GEARSHIFT <span class="text-accent">AI</span></span>
+        <div class="logo flex gap-2" style="align-items: center;">
+            <img src="{% static 'core/images/logo.png' %}" alt="Logo" style="width: 32px; height: 32px; border-radius: 6px;">
+            <span class="text-1 font-bold" style="font-size: 1.2rem; letter-spacing: -0.5px; font-family: var(--font-display);">KRISHNA <span class="text-accent">AUTO CARE</span></span>
         </div>
         <div class="flex gap-4">
             <a href="{% url 'login' %}" style="color: var(--text-2); text-decoration: none; font-size: 0.9rem; font-weight: 500;">Login</a>
@@ -96,8 +96,8 @@
     <footer style="padding: 6rem 5%; background: var(--bg-deep); border-top: 1px solid var(--border);">
         <div class="grid-3" style="gap: 4rem;">
             <div>
-                <div class="font-bold text-1" style="font-family: var(--font-display); font-size: 1.4rem; margin-bottom: 1rem;">GEARSHIFT <span class="text-accent">AI</span></div>
-                <p class="text-3">Redefining workshop efficiency through autonomous intelligence and precision engineering.</p>
+                <div class="font-bold text-1" style="font-family: var(--font-display); font-size: 1.4rem; margin-bottom: 1rem;">KRISHNA <span class="text-accent">AUTO CARE</span></div>
+                <p class="text-3">Redefining workshop efficiency through precision engineering and expert care.</p>
             </div>
             <div class="grid-2">
                 <div>
@@ -126,7 +126,7 @@
             </div>
         </div>
         <div style="margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center;" class="text-3">
-            &copy; 2026 GearShift AI Technologies. All rights reserved.
+            &copy; 2026 Krishna Auto Care. All rights reserved.
         </div>
     </footer>
 
