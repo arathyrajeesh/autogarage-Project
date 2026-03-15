@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from decimal import Decimal
 
 
 class UserProfile(models.Model):
@@ -188,6 +189,14 @@ class Invoice(models.Model):
     @property
     def balance_due(self):
         return self.total_amount - self.amount_paid
+
+    @property
+    def tax_amount(self):
+        return self.total_amount * Decimal('0.05')
+
+    @property
+    def grand_total(self):
+        return self.total_amount + self.tax_amount
 
     def __str__(self):
         return f"{self.invoice_number} - {self.job_card.vehicle.customer.name}"

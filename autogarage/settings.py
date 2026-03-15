@@ -7,12 +7,8 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 # SECRET_KEY = 'django-insecure-autogarage-secret-key-change-in-production'
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-key')
-DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = [
-    ".onrender.com",
-    "localhost",
-    "127.0.0.1"
-]
+DEBUG = True
+ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
